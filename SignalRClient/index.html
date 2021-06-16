@@ -15,6 +15,12 @@
     <button id="btnSend">Gönder</button>
 
     <div id="message"></div>
+
+    <div>
+        <ul id="clientList">
+
+        </ul>
+    </div>
 </body>
 <script src="signalr.min.js"></script>
 <script src="jquery.min.js"></script>
@@ -39,17 +45,21 @@
         }
         canStart();
 
+        function myAnimate() {
+            divStatus.fadeIn(2000, () => {
+                divStatus.fadeOut(2000);
+            }, 2000);
+        }
+
         //Connect örnegi
         const divStatus = $('#status');
-
+        //***CLİENTA özel bağlantı yakalama
         //Yeniden bağlantı talebi yapılmadan önce tetiklenir.
         connection.onreconnecting(error => {
             divStatus.css("background-color", "blue");
             divStatus.css("color", "white");
             divStatus.html("Bağlantı kuruluyor...");
-            divStatus.fadeIn(2000, () => {
-                divStatus.fadeOut(2000);
-            }, 2000);
+            myAnimate();
         });
 
         //Yeniden bağlantı gerçekleştiğinde tetiklenir.
@@ -57,9 +67,7 @@
             divStatus.css("background-color", "green");
             divStatus.css("color", "white");
             divStatus.html("Bağlantı kuruldu...");
-            divStatus.fadeIn(2000, () => {
-                divStatus.fadeOut(2000);
-            }, 2000);
+            myAnimate();
         });
 
         //Yeniden bağlantı girişiminin sonuçsuz kaldığı durumlarda tetiklenir.
@@ -67,10 +75,31 @@
             divStatus.css("background-color", "red");
             divStatus.css("color", "white");
             divStatus.html("Bağlanılamadı...");
-            divStatus.fadeIn(2000, () => {
-                divStatus.fadeOut(2000);
-            }, 2000);
+            myAnimate();
         });
+
+        //Bir kullanıcı katıldığında override ile server dan clienta bu metodu tetikletiriz.
+        connection.on("userJoined", connectionId => {
+            divStatus.html(`${connectionId} bağlandı.`);
+            divStatus.css("background-color", "green");
+            myAnimate();
+        });
+
+        connection.on("userLeaved", connectionId => {
+            divStatus.html(`${connectionId} ayrıldı.`);
+            divStatus.css("background-color", "red");
+            myAnimate();
+        });
+
+        //yeni bir bağlantı oldugunda yada çıkış yapıldıgında ilgili clientları getır.
+        connection.on("getHubClients", clientsList => {
+            let text = "";
+            $.each(clientsList, (index, item) => {
+                text += `<li>${item}</li>`;
+            });
+            $("#clientList").html(text);
+        })
+
 
         $('#btnSend').click(() => {
             let message = $('#txtMessage').val();
@@ -83,8 +112,10 @@
         });
         connection.on("receiveMessageOnClient", message => {
             console.log('success');
-            $("#message").append(message + "<br>");
+            $("#message").html(message + "<br>");
         });
+
+
     });
 </script>
 
