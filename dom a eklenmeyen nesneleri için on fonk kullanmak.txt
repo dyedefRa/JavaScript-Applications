@@ -1,0 +1,19 @@
+html e sonradan eklenen nesleler dom  nesnesine eklenmedikleri için 
+
+  $(".users").click(() => {
+            $(".users").each((index, item) => {
+                item.classList.remove("active");
+            });
+            $(this).addClass("active");
+        });
+
+ile erişim saglayamadık. On click ile erişecegiz.
+Bir üstteki etiketi bildireceğiz. ve alttaki gibi olmalı!
+
+
+ $("body").on("click", ".users", function() {
+            $(".users").each((index, item) => {
+                item.classList.remove("active");
+            });
+            $(this).addClass("active");
+        });
