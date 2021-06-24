@@ -17,12 +17,12 @@
         <div class="col-md-10">
             <div class="row">
                 <div class="col-md-3">
-                    <input type="text" class="form-control form-control-lg disabled" placeholder="Oda adı.">
-                    <button type="button" class="btn btn-info rightButton disabled">Oda Oluştur</button>
-                    <select size="5" style="width: 100%;" class="form-select disabled" multiple>
+                    <input type="text" id="txtRoomName" class="form-control form-control-lg disabled" placeholder="Oda adı.">
+                    <button id="btnCreateRoom" type="button" class="btn btn-info rightButton disabled">Oda Oluştur</button>
+                    <select size="5" style="width: 100%;" id="selectedRooms" class="form-select disabled" multiple>
                     <option selected value="-1">Odalar</option>
                     </select>
-                    <button type="button" class="btn btn-primary rightButton disabled">Seçili Odalara Gir</button>
+                    <button type="button" id="btnJoinGroup" class="btn btn-primary rightButton disabled">Seçili Odalara Gir</button>
                     <!-- ODALAR -->
                     <br> <br> <br>
 
@@ -41,20 +41,19 @@
 
                     </div>
 
-                    <textarea name="" id="" cols="30" rows="3" class="form-control" style="margin-top: 5px;" placeholder="İletilecek mesajı buraya giriniz."></textarea>
+                    <textarea name="" id="txtMessage" cols="30" rows="3" class="form-control" style="margin-top: 5px;" placeholder="İletilecek mesajı buraya giriniz."></textarea>
 
                     <button type="button" class="btn btn-light rightButton" id="btnSend">Gönder</button>
 
                     <br> <br> <br>
 
-                    <div class="list-group">
-                        <a href="" class="list-group-item list-group-item-action" aria-current="true">
+                    <div class="list-group" id="mesajlar">
+                        <a href="" class="list-group-item list-group-item-action mesaj" aria-current="true">
                             <div class="d-flex w-100 justify-context-between">
-                                <h5 class="mb-1">Ahmet</h5>
-                                <h5 class="mb-2">Sen</h5>
+                                <h5 class="mb-1"></h5>
+                                <h5 class="mb-2"></h5>
                             </div>
-                            <p class="mb-1"> Test içerik</p>
-                            <small>Test içerik2</small>
+                            <p class="mb-1"> </p>
                         </a>
                     </div>
                 </div>
@@ -95,12 +94,27 @@
             });
             $(this).addClass("active");
         });
+        // $("#btnSend").click(() => {
+        //     var x = $(".message").clone();
+        //     x.removeClass("message");
+        //     x.find("h5")[1].html() = ""; //Ahmeti gösterir
+        //     x.find("h5")[0].innerHTML = ""; //Seni gçsterir
+        //     $(".message").append(x);
+        // });
+
         $("#btnSend").click(() => {
-            var x = $(".message").clone();
-            x.removeClass("message");
-            x.find("h5")[1].innerHTML = ""; //Ahmeti gösterir
-            x.find("h5")[0].innerHTML = ""; //Seni gçsterir
-            $(".message").append(x);
+            const clientName = $(".users.active").first().html();
+            const message = $("#txtMessage").val();
+            //Serveri tetikletmek için invoke cagırıyoruz.
+            connection.invoke("SendMessageAsync", message, clientName);
+
+            const _message = $(".mesaj").clone();
+            _message.find("p").html(message);
+            // _message.find("h5")[1].html = "Sen";
+            $(".mesaj h5:eq(1)").html("Sen");
+            $(".mesaj h5:eq(0)").html("");
+            _message.removeClass("mesaj");
+            $("#mesajlar").append(_message);
         });
 
         //Kullanıcıyı Login edelim ve ardından bu method servera gidip alttaki methodları cagırsın
@@ -131,9 +145,42 @@
                 user.html(item.nickName);
                 $("#_clients").append(user);
             });
+        });
+        //Serverdaki method tetıkledın client tarafında bu methodu yakalıyoruz.
+        connection.on("receiveMessage", (message, senderer) => {
 
+            const _message = $(".mesaj").clone();
+            _message.find("p").html(message);
+            $(".mesaj h5:eq(0)").html(senderer);
+            $(".mesaj h5:eq(1)").html("");
+
+            // _message.find("h5")[0].html = senderer;
+            _message.removeClass("mesaj");
+            $("#mesajlar").append(_message);
         });
 
+
+
+        //Group Methodları  addedGroup
+        //Grup oluşturma
+        $("#btnCreateRoom").click(() => {
+            var roomName = $("#txtRoomName").val();
+            connection.invoke("CreateGroup", roomName);
+        });
+        //Grup oluşturulduktan sonra clientlari etkileyen method
+        connection.on("addedGroup", roomName => {
+            $("#selectedRooms").append(new Option(roomName, roomName));
+        });
+
+        //Gruba katıl
+        $("#btnJoinGroup").click(() => {
+            var selectedRooms = $("#selectedRooms").val();
+            console.log(selectedRooms);
+            // $("#selectedRooms option:selected");
+            connection.invoke("JoinGroup", selectedRooms);
+        });
+        //Gruba katıl fonksiyonunun clientları tetıkletmesı
+        connection.on()
 
 
     });
