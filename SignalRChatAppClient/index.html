@@ -12,16 +12,23 @@
 </head>
 
 <body>
+    <div id="showConnectionId" style="color: chocolate;" class="row justify-content-center">
+
+    </div>
     <div class="row">
         <div class="col-md-1"></div>
         <div class="col-md-10">
             <div class="row">
                 <div class="col-md-3">
                     <input type="text" id="txtRoomName" class="form-control form-control-lg disabled" placeholder="Oda adı.">
+                    <br>
                     <button id="btnCreateRoom" type="button" class="btn btn-info rightButton disabled">Oda Oluştur</button>
-                    <select size="5" style="width: 100%;" id="selectedRooms" class="form-select disabled" multiple>
-                    <option selected value="-1">Odalar</option>
+                    <br>
+                    <hr>
+                    <select size="5" style="width: 100%;" id="selectedRooms" class="form-select disabled " multiple>
+                    <option selected value="Tümü">Odalar</option>
                     </select>
+                    <br>
                     <button type="button" id="btnJoinGroup" class="btn btn-primary rightButton disabled">Seçili Odalara Gir</button>
                     <!-- ODALAR -->
                     <br> <br> <br>
@@ -42,8 +49,8 @@
                     </div>
 
                     <textarea name="" id="txtMessage" cols="30" rows="3" class="form-control" style="margin-top: 5px;" placeholder="İletilecek mesajı buraya giriniz."></textarea>
-
-                    <button type="button" class="btn btn-light rightButton" id="btnSend">Gönder</button>
+                    <button type="button" class="btn btn-light rightButton " id="btnGroupSend">Gruba Gönder</button>
+                    <button type="button" class="btn btn-light rightButton " id="btnSend">Gönder</button>
 
                     <br> <br> <br>
 
@@ -125,6 +132,10 @@
                     console.log(err));
             $(".disabled").removeAttr("disabled");
 
+            connection.on("sendThisConnectionId", (conId) => {
+                $("#showConnectionId").html(conId);
+            });
+
         });
 
         connection.on("clientJoined", nickName => {
@@ -179,8 +190,31 @@
             // $("#selectedRooms option:selected");
             connection.invoke("JoinGroup", selectedRooms);
         });
-        //Gruba katıl fonksiyonunun clientları tetıkletmesı
-        connection.on()
+
+        //Selecten odaya tıklandıgında alta odada olan clientlar gelsi.n
+        $("#selectedRooms").change(function() {
+            var room = $(this).val()[0];
+            _selectedGroup = room;
+            connection.invoke("SendGroupClients", room);
+        });
+
+        let _selectedGroup = "";
+
+        //Gruba mesaj gönder 
+        $("#btnGroupSend").click(() => {
+            const message = $("#txtMessage").val();
+            console.log('test');
+            if (_selectedGroup !== "") {
+                connection.invoke("SendMessageToGroup", _selectedGroup, message);
+                const _message = $(".mesaj").clone();
+                _message.find("p").html(message);
+                // _message.find("h5")[1].html = "Sen";
+                $(".mesaj h5:eq(1)").html("Sen");
+                $(".mesaj h5:eq(0)").html("");
+                _message.removeClass("mesaj");
+                $("#mesajlar").append(_message);
+            }
+        });
 
 
     });
